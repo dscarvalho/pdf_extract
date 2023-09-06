@@ -2,6 +2,7 @@ import logging
 import os.path
 import json
 import hashlib
+from typing import Dict
 
 from adobe.pdfservices.operation.auth.credentials import Credentials
 from adobe.pdfservices.operation.exception.exceptions import ServiceApiException, ServiceUsageException, SdkException
@@ -21,14 +22,17 @@ logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 
 
 class PDFServices:
-    def __init__(self, base_path: str = None):
+    def __init__(self, base_path: str = None, credentials: Dict[str, str] = None):
         if (base_path):
             self.base_path = base_path
         else:
             self.base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
         # Initial setup, create credentials instance.
-        if (os.path.exists("pdfservices-api-credentials.json")):
+        if (credentials):
+            client_id = credentials["client_id"]
+            client_secret = credentials["client_secret"]
+        elif (os.path.exists("pdfservices-api-credentials.json")):
             with open(self.base_path + "/pdfservices-api-credentials.json") as cred_file:
                 credentials = json.load(cred_file)
                 client_id = credentials["client_credentials"]["client_id"]

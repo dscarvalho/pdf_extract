@@ -1,0 +1,2 @@
+pdfservices-sdk==2.3.0
+pandas
