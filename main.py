@@ -13,7 +13,7 @@ def main(argv):
     with open("sections.json", "w") as res_file:
         json.dump(doc_info.get_sections(), res_file, indent=2)
 
-    print(doc_info.get_tables()[0].to_dict(orient="records"))
+    print(doc_info.get_tables()[1])
 
 
 if __name__ == '__main__':
