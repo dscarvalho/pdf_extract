@@ -32,7 +32,7 @@ class PDFServices:
         if (credentials):
             client_id = credentials["client_id"]
             client_secret = credentials["client_secret"]
-        elif (os.path.exists("pdfservices-api-credentials.json")):
+        elif (os.path.exists(self.base_path + "/pdfservices-api-credentials.json")):
             with open(self.base_path + "/pdfservices-api-credentials.json") as cred_file:
                 credentials = json.load(cred_file)
                 client_id = credentials["client_credentials"]["client_id"]
