@@ -73,6 +73,8 @@ class PDFServices:
                 result: FileRef = extract_pdf_operation.execute(execution_context)
 
                 # Save the result to the specified location.
+                if (not os.path.exists(self.base_path + f"/output")):
+                    os.makedirs(self.base_path + f"/output")
                 result.save_as(self.base_path + f"/output/{input_hash}.zip")
 
             except (ServiceApiException, ServiceUsageException, SdkException):
