@@ -6,6 +6,8 @@ from collections import OrderedDict
 
 from .base import DocumentInfo
 
+REF_SCORE_THRESHOLD = 0.85
+
 
 class PDFDocumentInfo(DocumentInfo):
     def __init__(self, extr_path):
@@ -49,6 +51,23 @@ class PDFDocumentInfo(DocumentInfo):
                         capture = False
                     elif (len(e["Text"]) > DocumentInfo.MINIMUM_REF_LEN):
                         refs.append(e["Text"].strip())
+
+        if (not refs):
+            doc_lists = dict()
+            for e in self.struct_data["elements"]:
+                if ("Text" in e and e["Path"].startswith("//Document/L")):
+                    if (e["Path"].split("/")[3] not in doc_lists):
+                        doc_lists[e["Path"].split("/")[3]] = list()
+                    if (len(e["Text"]) > DocumentInfo.MINIMUM_REF_LEN):
+                        doc_lists[e["Path"].split("/")[3]].append(e["Text"].strip())
+
+            ref_scores = {lt: sum([txt[-5:].strip().replace(".", "").isnumeric() for txt in doc_lists[lt]]) / len(doc_lists[lt])
+                          for lt in doc_lists}
+            max_score = max(ref_scores.items(), key=lambda x: x[1])
+            print (ref_scores)
+            print(max_score)
+            if (max_score[1] > REF_SCORE_THRESHOLD):
+                refs = doc_lists[max_score[0]]
 
         return refs
 
