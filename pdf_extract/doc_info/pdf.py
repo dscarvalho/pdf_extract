@@ -23,7 +23,7 @@ class PDFDocumentInfo(DocumentInfo):
                 if (e["Path"].startswith("//Document/H")):
                     cur_section = e["Text"]
                     sections[cur_section] = list()
-                elif (cur_section and e["Path"].startswith("//Document/P")):
+                elif (cur_section and (e["Path"].startswith("//Document/P") or e["Path"].startswith("//Document/L"))):
                     sections[cur_section].append(e["Text"])
 
         return sections
