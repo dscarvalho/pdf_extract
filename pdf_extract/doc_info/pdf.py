@@ -63,9 +63,10 @@ class PDFDocumentInfo(DocumentInfo):
 
             ref_scores = {lt: sum([txt[-5:].strip().replace(".", "").isnumeric() for txt in doc_lists[lt]]) / len(doc_lists[lt])
                           for lt in doc_lists}
-            max_score = max(ref_scores.items(), key=lambda x: x[1])
-            if (max_score[1] > REF_SCORE_THRESHOLD):
-                refs = doc_lists[max_score[0]]
+            if (len(ref_scores.items()) > 0):
+                max_score = max(ref_scores.items(), key=lambda x: x[1])
+                if (max_score[1] > REF_SCORE_THRESHOLD):
+                    refs = doc_lists[max_score[0]]
 
         return refs
 
