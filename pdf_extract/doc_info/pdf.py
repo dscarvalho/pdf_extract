@@ -1,5 +1,5 @@
 import json
-import pandas
+import pandas as pd
 from typing import List
 from zipfile import ZipFile
 from collections import OrderedDict
@@ -28,12 +28,12 @@ class PDFDocumentInfo(DocumentInfo):
 
         return sections
 
-    def get_tables(self) -> List[pandas.DataFrame]:
+    def get_tables(self) -> List[pd.DataFrame]:
         tables = list()
         for e in self.struct_data["elements"]:
             if (e["Path"].startswith("//Document/Table") and len(e["Path"].split("/")) == 4):
                 with self.source.open(e["filePaths"][0]) as table_file:
-                    table = pandas.read_csv(table_file)
+                    table = pd.read_csv(table_file, dtype=str)
                     tables.append(table)
 
         return tables
