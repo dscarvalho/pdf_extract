@@ -1,8 +1,8 @@
 import json
+import logging
 import pandas as pd
-from typing import List
+from typing import List, Tuple
 from zipfile import ZipFile
-from collections import OrderedDict
 
 from .base import DocumentInfo
 
@@ -15,30 +15,46 @@ class PDFDocumentInfo(DocumentInfo):
         with self.source.open("structuredData.json") as struct_file:
             self.struct_data = json.load(struct_file)
 
-    def get_sections(self) -> OrderedDict[str, List[str]]:
-        sections = OrderedDict()
+    @property
+    def title(self) -> str:
+        title = ""
+        for e in self.struct_data["elements"]:
+            if (e["Path"] == "//Document/Title"):
+                title = e["Text"]
+                break
+
+        return title
+
+    @property
+    def sections(self) -> List[dict]:
+        sections = list()
         cur_section = ""
         for e in self.struct_data["elements"]:
             if ("Text" in e):
                 if (e["Path"].startswith("//Document/H")):
                     cur_section = e["Text"]
-                    sections[cur_section] = list()
+                    sections.append({"title": cur_section, "content": list()})
                 elif (cur_section and (e["Path"].startswith("//Document/P") or e["Path"].startswith("//Document/L"))):
-                    sections[cur_section].append(e["Text"])
+                    sections[-1]["content"].append(e["Text"])
 
         return sections
 
-    def get_tables(self) -> List[pd.DataFrame]:
+    @property
+    def tables(self) -> List[pd.DataFrame]:
         tables = list()
         for e in self.struct_data["elements"]:
             if (e["Path"].startswith("//Document/Table") and len(e["Path"].split("/")) == 4):
                 with self.source.open(e["filePaths"][0]) as table_file:
-                    table = pd.read_csv(table_file, dtype=str)
-                    tables.append(table)
+                    try:
+                        table = pd.read_csv(table_file, dtype=str)
+                        tables.append(table)
+                    except pd.errors.ParserError:
+                        logging.error(f"Error parsing table {e['Path']} at {e['filePaths'][0]}")
 
         return tables
 
-    def get_references(self) -> List[str]:
+    @property
+    def references(self) -> List[str]:
         capture = False
         labels = ["references", "bibliography"]
         refs = []
