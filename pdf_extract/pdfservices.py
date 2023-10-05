@@ -53,6 +53,7 @@ class PDFServices:
             try:
                 # Create an ExecutionContext using credentials and create a new operation instance.
                 execution_context = ExecutionContext.create(self.credentials)
+                execution_context.authenticator.refresh_token()
                 extract_pdf_operation = ExtractPDFOperation.create_new()
 
                 # Set operation input from a source file.
