@@ -86,6 +86,10 @@ class PDFDocumentInfo(DocumentInfo):
 
         return refs
 
+    @property
+    def text(self) -> List[str]:
+        return [e["Text"] for e in self.struct_data["elements"] if ("Text" in e)]
+
 
 
 

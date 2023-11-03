@@ -16,7 +16,10 @@ def main(argv):
     print(doc_info.tables[1])
 
     with open("docinfo.json", "w") as res_file:
-        json.dump({"title": doc_info.title, "sections": doc_info.sections}, res_file, indent=2)
+        json.dump({"title": doc_info.title,
+                   "sections": doc_info.sections,
+                   "tables": [t.astype("str").to_dict("records") for t in doc_info.tables],
+                   "references": doc_info.references}, res_file, indent=2)
 
 
 if __name__ == '__main__':

@@ -26,6 +26,11 @@ class DocumentInfo(ABC):
     def references(self) -> List[str]:
         raise NotImplementedError
 
+    @property
+    @abstractmethod
+    def text(self) -> List[str]:
+        raise NotImplementedError
+
 
 
 
