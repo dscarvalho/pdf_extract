@@ -78,7 +78,7 @@ class PDFDocumentInfo(DocumentInfo):
                         doc_lists[e["Path"].split("/")[3]].append(e["Text"].strip())
 
             ref_scores = {lt: sum([txt[-5:].strip().replace(".", "").isnumeric() for txt in doc_lists[lt]]) / len(doc_lists[lt])
-                          for lt in doc_lists}
+                          for lt in doc_lists if len(doc_lists[lt]) > 0}
             if (len(ref_scores.items()) > 0):
                 max_score = max(ref_scores.items(), key=lambda x: x[1])
                 if (max_score[1] > REF_SCORE_THRESHOLD):
