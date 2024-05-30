@@ -1,2 +1,2 @@
-pdfservices-sdk @ git+https://github.com/neuro-symbolic-ai/pdfservices-python-sdk.git
-pandas
+pdfservices-sdk @ git+https://github.com/neuro-symbolic-ai/pdfservices-python-sdk.git@v2.3.1
+pandas==2.*
