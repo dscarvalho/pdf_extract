@@ -80,5 +80,6 @@ class PDFServices:
 
             except (ServiceApiException, ServiceUsageException, SdkException):
                 logging.exception("Exception encountered while executing operation")
+                return None
 
         return PDFDocumentInfo(self.base_path + f"/output/{input_hash}.zip")

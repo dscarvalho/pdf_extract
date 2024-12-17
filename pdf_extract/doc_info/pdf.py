@@ -43,12 +43,12 @@ class PDFDocumentInfo(DocumentInfo):
     def tables(self) -> List[pd.DataFrame]:
         tables = list()
         for e in self.struct_data["elements"]:
-            if (e["Path"].startswith("//Document/Table") and len(e["Path"].split("/")) == 4):
+            if (e["Path"].startswith("//Document/Table") and len(e["Path"].split("/")) == 4 and "filePaths" in e):
                 with self.source.open(e["filePaths"][0]) as table_file:
                     try:
                         table = pd.read_csv(table_file, dtype=str)
                         tables.append(table)
-                    except pd.errors.ParserError:
+                    except (pd.errors.ParserError, UnicodeDecodeError):
                         logging.error(f"Error parsing table {e['Path']} at {e['filePaths'][0]}")
 
         return tables
