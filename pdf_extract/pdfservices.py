@@ -4,15 +4,16 @@ import json
 import hashlib
 from typing import Dict
 
-from adobe.pdfservices.operation.auth.credentials import Credentials
+import adobe.pdfservices.operation.pdf_services as adobe_pdfservices
+from adobe.pdfservices.operation.auth.service_principal_credentials import ServicePrincipalCredentials
 from adobe.pdfservices.operation.exception.exceptions import ServiceApiException, ServiceUsageException, SdkException
-from adobe.pdfservices.operation.pdfops.options.extractpdf.extract_pdf_options import ExtractPDFOptions
-from adobe.pdfservices.operation.pdfops.options.extractpdf.extract_renditions_element_type import ExtractRenditionsElementType
-from adobe.pdfservices.operation.pdfops.options.extractpdf.extract_element_type import ExtractElementType
-from adobe.pdfservices.operation.pdfops.options.extractpdf.table_structure_type import TableStructureType
-from adobe.pdfservices.operation.execution_context import ExecutionContext
-from adobe.pdfservices.operation.io.file_ref import FileRef
-from adobe.pdfservices.operation.pdfops.extract_pdf_operation import ExtractPDFOperation
+from adobe.pdfservices.operation.pdf_services_media_type import PDFServicesMediaType
+from adobe.pdfservices.operation.pdfjobs.jobs.extract_pdf_job import ExtractPDFJob
+from adobe.pdfservices.operation.pdfjobs.result.extract_pdf_result import ExtractPDFResult
+from adobe.pdfservices.operation.pdfjobs.params.extract_pdf.extract_renditions_element_type import ExtractRenditionsElementType
+from adobe.pdfservices.operation.pdfjobs.params.extract_pdf.extract_element_type import ExtractElementType
+from adobe.pdfservices.operation.pdfjobs.params.extract_pdf.extract_pdf_params import ExtractPDFParams
+from adobe.pdfservices.operation.pdfjobs.params.extract_pdf.table_structure_type import TableStructureType
 
 from .doc_info.base import DocumentInfo
 from .doc_info.pdf import PDFDocumentInfo
@@ -41,42 +42,34 @@ class PDFServices:
             client_id = os.getenv('PDF_SERVICES_CLIENT_ID')
             client_secret = os.getenv('PDF_SERVICES_CLIENT_SECRET')
 
-        self.credentials = Credentials.service_principal_credentials_builder(). \
-            with_client_id(client_id). \
-            with_client_secret(client_secret). \
-            build()
+        self.credentials = ServicePrincipalCredentials(client_id=client_id, client_secret=client_secret)
 
     def extract(self, file_path: str) -> DocumentInfo:
         with open(file_path, "rb") as input_file:
             input_hash = hashlib.md5(input_file.read()).hexdigest()
         if (not os.path.exists(self.base_path + f"/output/{input_hash}.zip")):
             try:
-                # Create an ExecutionContext using credentials and create a new operation instance.
-                execution_context = ExecutionContext.create(self.credentials)
-                execution_context.authenticator.refresh_token()
-                extract_pdf_operation = ExtractPDFOperation.create_new()
+                pdf_services = adobe_pdfservices.PDFServices(credentials=self.credentials)
+                with open(file_path, "rb") as pdf_file:
+                    source = pdf_file.read()
 
-                # Set operation input from a source file.
-                source = FileRef.create_from_local_file(file_path)
-                extract_pdf_operation.set_input(source)
+                input_asset = pdf_services.upload(input_stream=source, mime_type=PDFServicesMediaType.PDF)
+                extract_params = ExtractPDFParams(
+                    elements_to_extract=[ExtractElementType.TEXT, ExtractElementType.TABLES],
+                    elements_to_extract_renditions=[ExtractRenditionsElementType.TABLES,
+                                                    ExtractRenditionsElementType.FIGURES],
+                    table_structure_type=TableStructureType.CSV
+                )
+                extract_job = ExtractPDFJob(input_asset=input_asset, extract_pdf_params=extract_params)
+                location = pdf_services.submit(extract_job)
+                response = pdf_services.get_job_result(location, ExtractPDFResult)
+                result_asset = response.get_result().get_resource()
+                stream_asset = pdf_services.get_content(result_asset)
 
-                # Build ExtractPDF options and set them into the operation
-                extract_pdf_options: ExtractPDFOptions = ExtractPDFOptions.builder() \
-                    .with_elements_to_extract([ExtractElementType.TEXT, ExtractElementType.TABLES]) \
-                    .with_elements_to_extract_renditions([ExtractRenditionsElementType.TABLES,
-                                                          ExtractRenditionsElementType.FIGURES]) \
-                    .with_get_char_info(True) \
-                    .with_table_structure_format(TableStructureType.CSV) \
-                    .build()
-                extract_pdf_operation.set_options(extract_pdf_options)
-
-                # Execute the operation.
-                result: FileRef = extract_pdf_operation.execute(execution_context)
-
-                # Save the result to the specified location.
                 if (not os.path.exists(self.base_path + f"/output")):
                     os.makedirs(self.base_path + f"/output", exist_ok=True)
-                result.save_as(self.base_path + f"/output/{input_hash}.zip")
+                with open(self.base_path + f"/output/{input_hash}.zip", "wb") as output_file:
+                    output_file.write(stream_asset.get_input_stream())
 
             except (ServiceApiException, ServiceUsageException, SdkException):
                 logging.exception("Exception encountered while executing operation")
