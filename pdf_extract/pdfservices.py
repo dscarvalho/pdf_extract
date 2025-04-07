@@ -3,6 +3,7 @@ import os.path
 import json
 import hashlib
 from typing import Dict
+from pathlib import Path
 
 import adobe.pdfservices.operation.pdf_services as adobe_pdfservices
 from adobe.pdfservices.operation.auth.service_principal_credentials import ServicePrincipalCredentials
@@ -27,7 +28,7 @@ class PDFServices:
         if (base_path):
             self.base_path = base_path
         else:
-            self.base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            self.base_path = os.path.normpath(os.path.join(str(Path.home()), ".pdf_extract", "cache"))
 
         # Initial setup, create credentials instance.
         if (credentials):
