@@ -16,7 +16,7 @@ def load_requirements() -> list:
 
 setup(
     name='pdf_extract',
-    version='0.2.0',
+    version='0.2.1',
     packages=['pdf_extract', 'pdf_extract.doc_info'],
     install_requires=load_requirements(),
     url='',
